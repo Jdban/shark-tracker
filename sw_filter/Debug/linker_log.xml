@@ -1,9 +1,0 @@
-<?xml version="1.0" standalone="no"?>
-<?xml-stylesheet type="text/xsl" href="file:///C:/Program Files/Analog Devices/VisualDSP 5.0/System/linker_log.xsl"?>
-<DOCUMENT gen_time='Wed Jan 12 11:25:21 2011
-'>
-<MSG id='0127A468' mid='li1021' type='Error' >
-<TEXT><![CDATA[The following symbols referenced in processor 'p0' could not be resolved:
-        'SPI_DEVICE_SS0' referenced from '.\Debug\signal_dspstak_sx2_zx2.doj']]></TEXT>
-</MSG>
-</DOCUMENT>
