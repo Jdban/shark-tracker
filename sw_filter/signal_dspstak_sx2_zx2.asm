@@ -26,13 +26,13 @@
 // SPI Signal Settings
 .VAR signal_device_settings[3] =
 	SPI_BAUD_5MHZ,						// SPI baud for flash
-	SPI_FLASH_SS,						// slave select flag
+	SPI_SEL_SS0,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
 	TIMOD1|								// transfer mode 1
 	MSBF|								// send MSB first
 	CPHASE|								// control CS manually
-	CLKPL |
+	CLKPL |								
 	WL8 |								// 8 bit transfer
 	SENDZ; 								// send zero if transmission buffer is empty
 
@@ -41,12 +41,11 @@
 
 // SPI Message
 .VAR signal_start_adc[5]=
-	SPI_DEVICE_10 | SPI_TR  | 0x03,
-	0xFE,						// read flash id command
-	0xFF,								// address three byte msb 
-	0xFE,								// address for manf id = x000000
-	0xFF;								// flash receive buffer conatining
-										// manufacturer and device	
+	SPI_DEVICE_11 | SPI_TR  | 0x03, // Device, Transmit/Receive, # bytes -1
+	0x01,						
+	0x80,						 
+	0x00,						
+	0x00;						
 				
 .SECTION/PM seg_pmco;
 
@@ -59,7 +58,7 @@
 /////////////////////////////////////////////////////////////////////////
 _init_signal_processing:
 
-    r4  = SPI_DEVICE_FLASH;				// SPI Device Number	
+    r4  = SPI_DEVICE_11;				// SPI Device Number	
 	r8  = signal_device_settings;		// SPI device parameters
 	r12 = signal_receive_buffer;	    // Buffer used for each individual byte 
 	
