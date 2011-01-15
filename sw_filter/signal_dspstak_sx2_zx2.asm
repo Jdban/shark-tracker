@@ -17,7 +17,7 @@
 #include "spi_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
 
-#define SIGNAL_READ_BUFF			10
+#define SIGNAL_READ_BUFF			4
 
 .GLOBAL _signal_processing;
 .GLOBAL _init_signal_processing;
@@ -45,11 +45,10 @@
 .VAR signal_receive_buffer[SIGNAL_READ_BUFF];
 
 // SPI Message
-.VAR signal_start_adc[5]=
-	SPI_DEVICE_11 | SPI_TR  | 0x05, // Device, Transmit/Receive, # bytes -1
-	0x01,						
-	0x80,						 
-	0x00,						
+.VAR signal_start_adc[4]=
+	SPI_DEVICE_11 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
+	0x01,							// Start Bit
+	0x80,						 	// Signal = 1, 00 = CH0
 	0x00;						
 				
 .SECTION/PM seg_pmco;
