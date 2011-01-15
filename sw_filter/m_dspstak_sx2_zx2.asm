@@ -160,13 +160,13 @@ initialize_other_hardware_pins:
 
 initialize_io_module:
 
-	CALL _init_io_module;
+	CALL _init_io_module;			// initialize io
 	
+	CALL _signal_processing;		// processes the signal
 
 _forever:
 
 	CALL _uart_port_manager;		// manages the uart receive and transmit processes
-	CALL _signal_processing;		// processes the signal
 
 	JUMP _forever;
 

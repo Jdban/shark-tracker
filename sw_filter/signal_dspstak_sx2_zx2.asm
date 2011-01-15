@@ -15,13 +15,18 @@
 
 #include <def21369.h>
 #include "spi_dspstak_sx2_zx2.h"
+#include "uart_dspstak_sx2_zx2.h"
 
 #define SIGNAL_READ_BUFF			10
 
 .GLOBAL _signal_processing;
 .GLOBAL _init_signal_processing;
+.GLOBAL _parse_data;
 
 .SECTION /DM seg_dmda;
+
+.VAR zero_str[] = '0',13,10,0;
+.VAR one_str[] = '1',13,10,0;
 
 // SPI Signal Settings
 .VAR signal_device_settings[3] =
@@ -41,7 +46,7 @@
 
 // SPI Message
 .VAR signal_start_adc[5]=
-	SPI_DEVICE_11 | SPI_TR  | 0x03, // Device, Transmit/Receive, # bytes -1
+	SPI_DEVICE_11 | SPI_TR  | 0x05, // Device, Transmit/Receive, # bytes -1
 	0x01,						
 	0x80,						 
 	0x00,						
@@ -119,7 +124,69 @@ _signal_processing:
     r4 = signal_start_adc;			// send dummy data
 	CALL _spi_add_queue;
 	CALL _complete_mem_spi_transfer;
+	
+	CALL _parse_data;				// parse the data
 
 	RTS;
 	
 _signal_processing.end:
+
+_parse_data:
+
+	// Send received data over RS-232
+test_b0:
+	r15 = 0;
+	r14 = DM(signal_receive_buffer);
+	COMP(r14, r15);
+	IF EQ JUMP zero_b0;
+one_b0:
+	r4 = one_str;
+	CALL _puts_uart;
+	JUMP test_b1;
+zero_b0:
+	r4 = zero_str;
+	CALL _puts_uart;
+
+test_b1:
+	r15 = 0;
+	r14 = DM(signal_receive_buffer+1);
+	COMP(r14, r15);
+	IF EQ JUMP zero_b1;
+one_b1:
+	r4 = one_str;
+	CALL _puts_uart;
+	JUMP test_b2;
+zero_b1:
+	r4 = zero_str;
+	CALL _puts_uart;
+
+test_b2:
+	r15 = 0;
+	r14 = DM(signal_receive_buffer+2);
+	COMP(r14, r15);
+	IF EQ JUMP zero_b2;
+one_b2:
+	r4 = one_str;
+	CALL _puts_uart;
+	JUMP test_b3;
+zero_b2:
+	r4 = zero_str;
+	CALL _puts_uart;
+
+test_b3:
+	r15 = 0x3F;
+	r14 = DM(signal_receive_buffer+3);
+	COMP(r14, r15);
+	IF LT JUMP zero_b3;
+one_b3:
+	r4 = one_str;
+	CALL _puts_uart;
+	JUMP finish;
+zero_b3:
+	r4 = zero_str;
+	CALL _puts_uart;
+	
+finish:
+	RTS;
+
+_parse_data.end:
