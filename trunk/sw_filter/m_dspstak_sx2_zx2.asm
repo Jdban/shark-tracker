@@ -50,6 +50,7 @@
 .VAR company_str[] = 'Shark Trackers, Cal Poly San Luis Obispo', 13, 10, 0;
 .VAR copyright_str[] = '(c) Copyright 2011', 13, 10, 0;
 .VAR rights_str[] = 'All Rights Reserved', 13, 10, 13, 10, 0;
+.VAR test_str[] = '0', 0;
 
 .SECTION/PM seg_pmda;
 
@@ -125,6 +126,7 @@ initialize_all_peripherals:
 	CALL _init_ext_port;			// initialize external AMI port and sdram controller registers 
 	CALL _init_spi_port;			// initialize spi port
 	CALL _init_signal_processing;
+	CALL _init_timer;
 	
 // Here is the section where user declare the functionality of the 
 // IOx/SSx pins with respect to the din connection.		
@@ -159,33 +161,20 @@ initialize_other_hardware_pins:
 	SET_GP1_DIR_BIT;				// dictate the direction of GP1 to be an output	pin
 
 initialize_io_module:
-
-	CALL _init_io_module;			// initialize io
 	
 	CALL _signal_processing;		// processes the signal
 
 _forever:
 
 	CALL _uart_port_manager;		// manages the uart receive and transmit processes
+	CALL _timer_5us;
+	r4 = 1;
+	COMP(r0, r4);
+	IF EQ JUMP send;
 
+	JUMP _forever;
+	
+send:
 	JUMP _forever;
 
 _main.end:
-
-
-
-///////////////////////////////////////////////////////////////////////
-//
-//	_init_io_module
-//
-//	All initializations for an external IO module should be done
-//	here. If there are no io module a basic return is just sufficient
-//
-/////////////////////////////////////////////////////////////////////////
-_init_io_module:
-
-
-    	
-	RTS;
-_init_io_module.end:
-

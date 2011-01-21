@@ -42,6 +42,7 @@
 .GLOBAL	_timer_isr;
 .GLOBAL	_init_timer;
 .GLOBAL _timer_1s;
+.GLOBAL _timer_5us;
 
 // global variables
 .GLOBAL	_timer_ticks;						
@@ -239,13 +240,12 @@ _timer_isr:
 	r2 = DM(i3,m5);
 	r2 = r2 + 1			,	DM(i2,m6) = r1;
 	DM(i3,m5) = r2;
-	
+		
 	POP STS;
 	RTI;
 	
 _timer_isr.end:	
 
-	
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //	_init_timer
@@ -328,6 +328,52 @@ timer_1s_expired:
 	RTS;	
 
 _timer_1s.end:	
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//	_timer_5us
+//
+//	Notes:  Uses _timer_ticks[3] as a one shot 
+//
+//	If this function is called and 1 sec has elapsed, the timer is reset and r0
+//	returns 1, else r0 returns 0, Status may also me checked (IF EQ or NE)
+//
+//	Written by Danville Signal Processing
+//
+//	Date:			    	September 2006 	
+//
+//	Calling parameters: 	None
+//
+// 	Return value:			r0
+//			
+//	Modified registers:		r0, r1;	
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+_timer_5us:
+	
+	r1 = DM(TICK_USER1);
+	r1 = PASS r1;
+	IF LT JUMP timer_5us_expired;	// tick has wrapped, therefore it has expired
+
+	r0 = 0x00000002;	
+	
+	COMP(r1,r0);
+	IF GE JUMP timer_5us_expired;  		
+
+timer_5us_still_counting:
+
+	r0 = 0;
+	r0 = PASS r0;
+	RTS;	
+	
+timer_5us_expired:
+
+	DM(TICK_USER1) = m5;				// Set to 0
+	r0 = 1;
+	r0 = PASS r0;
+	RTS;	
+
+_timer_5us.end:	
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
