@@ -18,6 +18,7 @@
 // 21368 / 21369 Interrupt Vector Table
 //
 .extern _main;
+.extern _timer_isr;
 
 
 .section/pm seg_rth;
@@ -47,10 +48,10 @@ __SOVFI:        // 0x0C: Status loop or mode stack overflow or PC stack full
         jump (pc,0);
 
 __TMZHI:        // 0x10: Core timer interrupt (higher priority option)
-        jump (pc,0);
-        jump (pc,0);
-        jump (pc,0);
-        jump (pc,0);
+        nop;    // <-- (this line is not executed)
+       jump _timer_isr;
+        nop;
+        nop;
 
 __SPERRI:         // 0x14:
         jump (pc,0); jump (pc,0); jump (pc,0); jump (pc,0);

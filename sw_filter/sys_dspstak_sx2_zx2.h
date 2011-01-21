@@ -33,6 +33,7 @@
 .EXTERN _init_ext_port;
 .EXTERN	_init_timer;
 .EXTERN _timer_1s;
+.EXTERN _timer_5us;
 
 .EXTERN _sys_set_coreclock;
 .EXTERN _sys_assign_pins;
