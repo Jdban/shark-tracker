@@ -165,8 +165,11 @@ extern void declared_expansion_spi_ss;
 #define TCOUNT_VAL		995
 #elif defined(__ADSP21369__)
 
-#define TPERIOD_VAL		1293
-#define TCOUNT_VAL		1293
+// 1293 = 4us           (base)
+// 1616 = 5us	200ksps (73khz hydrophone)
+// 6465 = 20us	 50ksps (test)
+#define TPERIOD_VAL		6465
+#define TCOUNT_VAL		6465
 #endif	
 
 #define NO_SDRAM		0

@@ -50,7 +50,6 @@
 .VAR company_str[] = 'Shark Trackers, Cal Poly San Luis Obispo', 13, 10, 0;
 .VAR copyright_str[] = '(c) Copyright 2011', 13, 10, 0;
 .VAR rights_str[] = 'All Rights Reserved', 13, 10, 13, 10, 0;
-.VAR test_str[] = '0', 0;
 
 .SECTION/PM seg_pmda;
 
@@ -167,14 +166,7 @@ initialize_io_module:
 _forever:
 
 	CALL _uart_port_manager;		// manages the uart receive and transmit processes
-	CALL _timer_5us;
-	r4 = 1;
-	COMP(r0, r4);
-	IF EQ JUMP send;
 
-	JUMP _forever;
-	
-send:
 	JUMP _forever;
 
 _main.end:
