@@ -159,14 +159,27 @@ initialize_other_hardware_pins:
 	SET_GP0_DIR_BIT;				// dictate the direction of GP0 to be an output pin
 	SET_GP1_DIR_BIT;				// dictate the direction of GP1 to be an output	pin
 
-initialize_io_module:
+	CALL _signal_processing;
 	
-	CALL _signal_processing;		// processes the signal
-
 _forever:
 
 	CALL _uart_port_manager;		// manages the uart receive and transmit processes
 
+	r14 = 0x00;
+	r15 = DM(_process_signal_ready);
+	COMP(r14, r15);
+	IF NE JUMP process;
+	
+	JUMP _forever;
+	
+process:
+
+	CALL _uart_port_manager;		// manages the uart receive and transmit processes
+
+	r14 = 0x00;
+	DM(_process_signal_ready) = r14;
+	CALL _signal_processing;
+	
 	JUMP _forever;
 
 _main.end:

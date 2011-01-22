@@ -71,7 +71,9 @@
 
 .EXTERN _peripheral_control_status;		
 .EXTERN _spi_miso_enable_status;
-.EXTERN _declared_expansion_spi_ss;		
+.EXTERN _declared_expansion_spi_ss;	
+
+.EXTERN _process_signal_ready;	
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -168,8 +170,8 @@ extern void declared_expansion_spi_ss;
 // 1293 = 4us           (base)
 // 1616 = 5us	200ksps (73khz hydrophone)
 // 6465 = 20us	 50ksps (test)
-#define TPERIOD_VAL		6465
-#define TCOUNT_VAL		6465
+#define TPERIOD_VAL		64650
+#define TCOUNT_VAL		64650
 #endif	
 
 #define NO_SDRAM		0

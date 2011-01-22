@@ -71,6 +71,8 @@
 .GLOBAL _spi_miso_enable_status;
 .GLOBAL _declared_expansion_spi_ss;			
 
+.GLOBAL _process_signal_ready;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //	This code library incorporates majority of the support needed to manage a basic dspstak
@@ -180,6 +182,7 @@
 .VAR _declared_expansion_spi_ss;		// will contain the value of which of the SSx/IOx
 										// bits will be selected for spi slave selects
 
+.VAR _process_signal_ready;
 											
 .SECTION/PM seg_pmda;
 
@@ -223,6 +226,9 @@ _timer_isr:
 	BIT SET MODE1 SRD1L | SRD1H | SRD2L | SRD2H | SRRFL | SRRFH;
 	NOP;
 	
+	r1 = 0x01;
+	DM(_process_signal_ready) = r1;
+	/**
 	i2 = _timer_ticks;
 	i3 = _timer_ticks + 1;
 	r1 = DM(i2,m5);
@@ -241,6 +247,7 @@ _timer_isr:
 	r2 = DM(i3,m5);
 	r2 = r2 + 1			,	DM(i2,m6) = r1;
 	DM(i3,m5) = r2;
+	**/
 		
 	POP STS;
 	RTI;
@@ -277,7 +284,10 @@ _init_timer:
 	TPERIOD = TPERIOD_VAL;		
 	TCOUNT  = TCOUNT_VAL;				// The timer freq = 256kHz
 		
-	BIT SET MODE2 TIMEN;				// Enable timer 	
+	BIT SET MODE2 TIMEN;				// Enable timer 
+	
+	r1 = 0x00;
+	DM(_process_signal_ready) = r1;
 	
 	RTS;
 	
