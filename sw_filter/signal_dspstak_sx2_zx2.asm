@@ -45,7 +45,7 @@
 .VAR signal_receive_buffer[SIGNAL_READ_BUFF];
 
 // SPI Message
-.VAR signal_start_adc[4]=
+.VAR signal_start_adc_ch1[4]=
 	SPI_DEVICE_11 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
 	0x01,							// Start Bit
 	0x80,						 	// Signal = 1, 00 = CH0
@@ -120,7 +120,7 @@ _complete_mem_spi_transfer.end:
 /////////////////////////////////////////////////////////////////////////
 _signal_processing:
 
-    r4 = signal_start_adc;			// send dummy data
+    r4 = signal_start_adc_ch1;	 	// send the get channel 1 command
 	CALL _spi_add_queue;
 	CALL _complete_mem_spi_transfer;
 	
@@ -133,6 +133,7 @@ _signal_processing.end:
 _parse_data:
 
 	// Send received data over RS-232
+/**
 test_b0:
 	r15 = 0;
 	r14 = DM(signal_receive_buffer);
@@ -171,7 +172,7 @@ one_b2:
 zero_b2:
 	r4 = zero_str;
 	CALL _puts_uart;
-
+**/
 test_b3:
 	r15 = 0x3F;
 	r14 = DM(signal_receive_buffer+3);
