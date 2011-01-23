@@ -24,6 +24,7 @@
 #endif	
 
 #include <SRU.h>
+#include <asm_sprt.h>
 #include "sys_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
 
@@ -32,6 +33,8 @@
 .GLOBAL _uart_char_loopback;
 .GLOBAL _puts_uart;
 
+.GLOBAL _uart_update;
+.GLOBAL _uart_write;
 
 /////////////////////////////////////////////////////////////////////////
 //
@@ -216,8 +219,17 @@ _uart_port_manager_exit:
 	RTS;
 _uart_port_manager.end:
 
+_uart_update:
+	entry;
+	CALL _uart_port_manager;
+	exit;
+_uart_update.end:
 
-
+_uart_write:
+	entry;
+	CALL _puts_uart;
+	exit;
+_uart_write.end:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //

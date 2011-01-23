@@ -14,6 +14,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include <def21369.h>
+#include <asm_sprt.h>
 #include "spi_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
 
@@ -117,13 +118,13 @@ _complete_mem_spi_transfer.end:
 //
 /////////////////////////////////////////////////////////////////////////
 _get_adc1_ch0:
-
+	entry;
+	
     r4 = adc1_ch0_start;		 	// send the get channel 1 command
 	CALL _spi_add_queue;
 	CALL _complete_mem_spi_transfer;
 	
 	r0 = DM(adc1_ch0_receive_buffer+3);
 
-	RTS;
-	
+	exit;
 _get_adc1_ch0.end:

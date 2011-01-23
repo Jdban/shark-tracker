@@ -32,6 +32,7 @@
 
 #endif	
 
+#include <asm_sprt.h>
 #include "spi_dspstak_sx2_zx2.h"
 #include "sys_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
@@ -57,7 +58,7 @@
 .SECTION/PM seg_pmco;
 
 _initialize:
-
+	entry;
 
 //  Changinge core clock to maximum possible value.
 // 	Value of r4 and r8 are adjusted according to the declared processor
@@ -159,4 +160,6 @@ initialize_other_hardware_pins:
 	SET_GP0_DIR_BIT;				// dictate the direction of GP0 to be an output pin
 	SET_GP1_DIR_BIT;				// dictate the direction of GP1 to be an output	pin
 
+	exit;
+	
 _initialize.end:

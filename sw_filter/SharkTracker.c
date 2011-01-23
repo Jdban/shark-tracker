@@ -101,8 +101,8 @@ void main(void)
 	
 	for(;;)
 	{
-		// Check the UART buffer and push out any buffered chars
-		uart_port_manager();
+		// Update the UART driver
+		uart_update();
 		
 		// Check if we are ready to sample
 		if (process_signal_ready)
@@ -118,11 +118,11 @@ void main(void)
 			// Output high or low
 			if (h1_out[0] < 1.0f)
 			{
-				puts_uart("0\n");
+				uart_write("0\n");
 			}
 			else
 			{
-				puts_uart("1\n");
+				uart_write("1\n");
 			}
 		}
 	}
