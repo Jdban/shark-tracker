@@ -14,8 +14,11 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include <def21369.h>
+#include <asm_sprt.h>
 #include "spi_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
+
+.EXTERN _fir;
 
 #define SIGNAL_READ_BUFF			4
 
@@ -27,6 +30,11 @@
 
 .VAR zero_str[] = '0',13,10,0;
 .VAR one_str[] = '1',13,10,0;
+
+#define TAPS 34
+.VAR state[TAPS+1];
+.VAR input;
+.VAR output;
 
 // SPI Signal Settings
 .VAR signal_device_settings[3] =
@@ -50,7 +58,11 @@
 	0x01,							// Start Bit
 	0x80,						 	// Signal = 1, 00 = CH0
 	0x00;						
-				
+			
+.SECTION /DM seg_pmda;
+
+.VAR coeffs[TAPS];
+		
 .SECTION/PM seg_pmco;
 
 /////////////////////////////////////////////////////////////////////////
@@ -68,6 +80,14 @@ _init_signal_processing:
 	
 	CALL _init_spi_device;				// declare device parameters for flash in
 										// spi protocol
+	
+	// Initialize state array									
+	b0 = state;
+	l0 = @state-1;
+	f8=0.0;
+	lcntr = TAPS, do clear_fir until lce;
+clear_fir:  dm(i0,m1) = f8;
+	i0 = state;
 										
 	RTS;
 	
@@ -133,50 +153,17 @@ _signal_processing.end:
 _parse_data:
 
 	// Send received data over RS-232
-/**
-test_b0:
-	r15 = 0;
-	r14 = DM(signal_receive_buffer);
-	COMP(r14, r15);
-	IF EQ JUMP zero_b0;
-one_b0:
-	r4 = one_str;
-	CALL _puts_uart;
-	JUMP test_b1;
-zero_b0:
-	r4 = zero_str;
-	CALL _puts_uart;
-
-test_b1:
-	r15 = 0;
-	r14 = DM(signal_receive_buffer+1);
-	COMP(r14, r15);
-	IF EQ JUMP zero_b1;
-one_b1:
-	r4 = one_str;
-	CALL _puts_uart;
-	JUMP test_b2;
-zero_b1:
-	r4 = zero_str;
-	CALL _puts_uart;
-
-test_b2:
-	r15 = 0;
-	r14 = DM(signal_receive_buffer+2);
-	COMP(r14, r15);
-	IF EQ JUMP zero_b2;
-one_b2:
-	r4 = one_str;
-	CALL _puts_uart;
-	JUMP test_b3;
-zero_b2:
-	r4 = zero_str;
-	CALL _puts_uart;
-**/
+	r4 = DM(signal_receive_buffer+3);
+	
+	f12 = FLOAT r4;
+	f13 = 3.3;
+	f14 = f12 * f13;
+	f13 = 0.0009765625; // 1/1024
+	f12 = f14 * f13;
+	
 test_b3:
-	r15 = 0x3F;
-	r14 = DM(signal_receive_buffer+3);
-	COMP(r14, r15);
+	f15 = 1.0;
+	COMP(f0, f15);
 	IF LT JUMP zero_b3;
 one_b3:
 	r4 = one_str;
@@ -188,5 +175,7 @@ zero_b3:
 	
 finish:
 	RTS;
+	
+	exit;
 
 _parse_data.end:
