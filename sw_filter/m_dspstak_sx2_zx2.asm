@@ -40,7 +40,7 @@
 
 #define SDRAM_STAT 		SDRAM
 
-.GLOBAL _main;
+.GLOBAL _initialize;
 
 .SECTION/DM seg_dmda;
 
@@ -56,7 +56,7 @@
 
 .SECTION/PM seg_pmco;
 
-_main:
+_initialize:
 
 
 //  Changinge core clock to maximum possible value.
@@ -159,27 +159,4 @@ initialize_other_hardware_pins:
 	SET_GP0_DIR_BIT;				// dictate the direction of GP0 to be an output pin
 	SET_GP1_DIR_BIT;				// dictate the direction of GP1 to be an output	pin
 
-	CALL _signal_processing;
-	
-_forever:
-
-	CALL _uart_port_manager;		// manages the uart receive and transmit processes
-
-	r14 = 0x00;
-	r15 = DM(_process_signal_ready);
-	COMP(r14, r15);
-	IF NE JUMP process;
-	
-	JUMP _forever;
-	
-process:
-
-	CALL _uart_port_manager;		// manages the uart receive and transmit processes
-
-	r14 = 0x00;
-	DM(_process_signal_ready) = r14;
-	CALL _signal_processing;
-	
-	JUMP _forever;
-
-_main.end:
+_initialize.end:
