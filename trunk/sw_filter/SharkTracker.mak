@@ -36,13 +36,13 @@ RM=cmd /C del /F /Q
 
 ifeq ($(MAKECMDGOALS),SharkTracker_Debug)
 
-SharkTracker_Debug : ./Debug/SharkTracker.ldr 
+SharkTracker_Debug : ./Debug/SharkTracker.dxe 
 
 ./Debug/ivt_dspstak_sx2_zx2.doj :./ivt_dspstak_sx2_zx2.asm 
 	@echo ".\ivt_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\ivt_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\ivt_dspstak_sx2_zx2.doj -MM
 
-./Debug/m_dspstak_sx2_zx2.doj :./m_dspstak_sx2_zx2.asm ./memory_dspstak_sx2_zx2.h ./signal_dspstak_sx2_zx2.h ./spi_dspstak_sx2_zx2.h ./sys_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/SRU.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sru21369.h 
+./Debug/m_dspstak_sx2_zx2.doj :./m_dspstak_sx2_zx2.asm ./memory_dspstak_sx2_zx2.h ./signal_dspstak_sx2_zx2.h ./spi_dspstak_sx2_zx2.h ./sys_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/SRU.h $(VDSP)/213xx/include/asm_sprt.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sru21369.h 
 	@echo ".\m_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\m_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\m_dspstak_sx2_zx2.doj -MM
 
@@ -50,11 +50,11 @@ SharkTracker_Debug : ./Debug/SharkTracker.ldr
 	@echo ".\memory_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\memory_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\memory_dspstak_sx2_zx2.doj -MM
 
-Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/213xx/include/complex.h init.h uart.h signal.h sys.h $(VDSP)/213xx/include/def21369.h 
+Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/213xx/include/complex.h init.h uart.h signal.h sys.h 
 	@echo ".\SharkTracker.c"
 	$(VDSP)/cc21k.exe -c .\SharkTracker.c -file-attr ProjectName=SharkTracker -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -proc ADSP-21369 -o .\Debug\SharkTracker.doj -MM
 
-./Debug/signal_dspstak_sx2_zx2.doj :./signal_dspstak_sx2_zx2.asm ./spi_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/def21369.h 
+./Debug/signal_dspstak_sx2_zx2.doj :./signal_dspstak_sx2_zx2.asm ./spi_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/asm_sprt.h $(VDSP)/213xx/include/def21369.h 
 	@echo ".\signal_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\signal_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\signal_dspstak_sx2_zx2.doj -MM
 
@@ -66,17 +66,13 @@ Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/21
 	@echo ".\sys_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\sys_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\sys_dspstak_sx2_zx2.doj -MM
 
-./Debug/uart_dspstak_sx2_zx2.doj :./sys_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.asm ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/SRU.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sru21369.h 
+./Debug/uart_dspstak_sx2_zx2.doj :./sys_dspstak_sx2_zx2.h ./uart_dspstak_sx2_zx2.asm ./uart_dspstak_sx2_zx2.h $(VDSP)/213xx/include/SRU.h $(VDSP)/213xx/include/asm_sprt.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/sru21369.h 
 	@echo ".\uart_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\uart_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\uart_dspstak_sx2_zx2.doj -MM
 
 ./Debug/SharkTracker.dxe :./ADSP-21369.LDF $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/369_hdr.doj ./Debug/ivt_dspstak_sx2_zx2.doj ./Debug/m_dspstak_sx2_zx2.doj ./Debug/memory_dspstak_sx2_zx2.doj ./Debug/SharkTracker.doj ./Debug/signal_dspstak_sx2_zx2.doj ./Debug/spi_dspstak_sx2_zx2.doj ./Debug/sys_dspstak_sx2_zx2.doj ./Debug/uart_dspstak_sx2_zx2.doj $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libc36x.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libio.dlb $(VDSP)/213xx/lib/2136x_LX3_rev_0.1/libdsp36x.dlb 
 	@echo "Linking..."
 	$(VDSP)/cc21k.exe .\Debug\ivt_dspstak_sx2_zx2.doj .\Debug\m_dspstak_sx2_zx2.doj .\Debug\memory_dspstak_sx2_zx2.doj .\Debug\SharkTracker.doj .\Debug\signal_dspstak_sx2_zx2.doj .\Debug\spi_dspstak_sx2_zx2.doj .\Debug\sys_dspstak_sx2_zx2.doj .\Debug\uart_dspstak_sx2_zx2.doj -T .\ADSP-21369.LDF -L .\Debug -add-debug-libpaths -flags-link -od,.\Debug -o .\Debug\SharkTracker.dxe -proc ADSP-21369 -flags-link -MM
-
-./Debug/SharkTracker.ldr :./Debug/SharkTracker.dxe $(VDSP)/213xx/ldr/369_prom.dxe 
-	@echo "Creating loader file..."
-	$(VDSP)/elfloader.exe -bprom -fHEX -HostWidth8 -l $(VDSP)\213xx\ldr\369_prom.dxe .\Debug\SharkTracker.dxe -o .\Debug\SharkTracker.ldr -proc ADSP-21369 -MM
 
 endif
 
@@ -92,7 +88,6 @@ SharkTracker_Debug_clean:
 	-$(RM) ".\Debug\sys_dspstak_sx2_zx2.doj"
 	-$(RM) ".\Debug\uart_dspstak_sx2_zx2.doj"
 	-$(RM) ".\Debug\SharkTracker.dxe"
-	-$(RM) ".\Debug\SharkTracker.ldr"
 	-$(RM) ".\Debug\*.ipa"
 	-$(RM) ".\Debug\*.opa"
 	-$(RM) ".\Debug\*.ti"
