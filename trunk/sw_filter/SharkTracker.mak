@@ -50,7 +50,7 @@ SharkTracker_Debug : ./Debug/SharkTracker.ldr
 	@echo ".\memory_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\memory_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\memory_dspstak_sx2_zx2.doj -MM
 
-Debug/SharkTracker.doj :SharkTracker.c init.h uart.h signal.h sys.h $(VDSP)/213xx/include/def21369.h 
+Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/213xx/include/complex.h init.h uart.h signal.h sys.h $(VDSP)/213xx/include/def21369.h 
 	@echo ".\SharkTracker.c"
 	$(VDSP)/cc21k.exe -c .\SharkTracker.c -file-attr ProjectName=SharkTracker -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -proc ADSP-21369 -o .\Debug\SharkTracker.doj -MM
 
