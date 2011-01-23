@@ -1,11 +1,6 @@
 
 ARCHITECTURE(ADSP-21369)
 
-
-//   Danville Note: 
-//			1) 	Added sdram section, Bank 0 
-//			2)	Deleted sram section, sram section originally from EZ-KIT architecture	
-//  
 //   Note: The SHARC 21369 has 2Mbit RAM and 6Mbit ROM in total.
 
 //   ADSP-21369 Memory Map:
@@ -136,39 +131,73 @@ SEARCH_DIR( $ADI_DSP/213xx/lib )
 
 #ifdef _ADI_THREADS
 #ifdef __ADI_LIBEH__
-$LIBRARIES = libehmt.dlb, libc36xmt.dlb, LIBIOMT, libdsp36x.dlb;
+$LIBRARIES = libehmt.dlb, libc36xmt.dlb, LIBIOMT, libdsp36x.dlb, libcppehmt.dlb, libcpprtehmt.dlb;
 #else
-$LIBRARIES = libc36xmt.dlb, LIBIOMT, libdsp36x.dlb;
+$LIBRARIES = libc36xmt.dlb, LIBIOMT, libdsp36x.dlb, libcppmt.dlb, libehmt.dlb, libcpprtmt.dlb;
 #endif
 #else
 #ifdef __ADI_LIBEH__
-$LIBRARIES = libeh.dlb, libc36x.dlb, LIBIO, libdsp36x.dlb;
+$LIBRARIES = libeh.dlb, libc36x.dlb, LIBIO, libdsp36x.dlb, libcppeh.dlb, libcpprteh.dlb;
 #else
-$LIBRARIES = libc36x.dlb, LIBIO, libdsp36x.dlb;
+$LIBRARIES = libc36x.dlb, LIBIO, libdsp36x.dlb   ;
 #endif
 #endif
 
 // Libraries from the command line are included in COMMAND_LINE_OBJECTS.
-$OBJECTS = $COMMAND_LINE_OBJECTS;
+#ifdef __cplusplus
+#ifdef _ADI_THREADS
+# define CRT_HDR 369_cpp_hdr_mt.doj
+#else
+# define CRT_HDR 369_cpp_hdr.doj
+#endif //_ADI_THREADS
+#else
+# define CRT_HDR 369_hdr.doj
+#endif
+$OBJECTS = CRT_HDR, $COMMAND_LINE_OBJECTS;
 
 MEMORY
 {
-  seg_rth  { TYPE(PM RAM) START(0x00090000) END(0x000900ff) WIDTH(48) }
-  seg_init { TYPE(PM RAM) START(0x00090100) END(0x000901ff) WIDTH(48) }
+  seg_rth  { TYPE(PM RAM) START(0x00090000) END(0x000901CF) WIDTH(48) }
+  seg_init { TYPE(PM RAM) START(0x000901D0) END(0x000901ff) WIDTH(48) }
   seg_int_code { TYPE(PM RAM) START(0x00090200) END(0x000902CF) WIDTH(48) }
   seg_pmco { TYPE(PM RAM) START(0x000902D0) END(0x00093FFF) WIDTH(48) }
   seg_pmda { TYPE(PM RAM) START(0x000C0000) END(0x000c1FFF) WIDTH(32) }
 
+#ifdef __cplusplus
+  mem_ctdm { TYPE(DM RAM) START(0x000b8000) END(0x000b80ff) WIDTH(32) }
+#ifdef IDDE_ARGS
+#define ARGV_START 0xb8100
+  mem_argv { TYPE(DM RAM) START(0x000b8100) END(0x000b81ff) WIDTH(32) }
+  seg_dmda { TYPE(DM RAM) START(0x000b8200) END(0x000bbfff) WIDTH(32) }
+#else
+  seg_dmda { TYPE(DM RAM) START(0x000b8100) END(0x000bbfff) WIDTH(32) }
+#endif
+#else
+#ifdef IDDE_ARGS
+#define ARGV_START 0xb8000
+  mem_argv { TYPE(DM RAM) START(0x000b8000) END(0x000b80ff) WIDTH(32) }
+  seg_dmda { TYPE(DM RAM) START(0x000b8100) END(0x000bbfff) WIDTH(32) }
+#else
   seg_dmda { TYPE(DM RAM) START(0x000b8000) END(0x000bbfff) WIDTH(32) }
+#endif
+#endif
   seg_stak { TYPE(DM RAM) START(0x000bc000) END(0x000bdfff) WIDTH(32) }
   seg_heap { TYPE(DM RAM) START(0x000e0000) END(0x000e1fff) WIDTH(32) }
-  seg_sdram { TYPE(DM RAM) START(0x00200000) END(0x003fffff) WIDTH(32) }
-  
+  seg_sram { TYPE(DM RAM) START(0x01200000) LENGTH(0x3fff) WIDTH(8) }
+  seg_sdram { TYPE(PM RAM) START(0x00200000) END(0x0023FFFF) WIDTH(32) }
 }
 
 
 PROCESSOR p0
 {
+#ifdef IDDE_ARGS
+    RESOLVE(___argv_string, ARGV_START)
+#endif
+#ifdef __cplusplus
+    KEEP( _main,___ctor_NULL_marker,___lib_end_of_heap_descriptions )
+#else
+    KEEP( _main,___lib_end_of_heap_descriptions )
+#endif
     LINK_AGAINST( $COMMAND_LINE_LINK_AGAINST)
     OUTPUT( $COMMAND_LINE_OUTPUT_FILE )
 
@@ -201,17 +230,45 @@ PROCESSOR p0
             INPUT_SECTIONS( $OBJECTS(seg_pmda) $LIBRARIES(seg_pmda))
         } > seg_pmda
 
+#ifdef __cplusplus
+                dxe_ctdm
+                {
+                  FORCE_CONTIGUITY
+                  __ctors = .;    /* points to the start of the section */
+                  INPUT_SECTIONS( $OBJECTS(seg_ctdm) $LIBRARIES(seg_ctdm))
+                  INPUT_SECTIONS( $OBJECTS(seg_ctdml) $LIBRARIES(seg_ctdml))
+                } > mem_ctdm
+#endif
 
         .bss ZERO_INIT
         {
            INPUT_SECTIONS( $OBJECTS(.bss) $LIBRARIES(.bss))
         } > seg_dmda
 
+#ifdef __cplusplus
+                dxe_gdt
+                {
+                  FORCE_CONTIGUITY
+                  INPUT_SECTIONS( $OBJECTS(.gdt) $LIBRARIES(.gdt))
+                  INPUT_SECTIONS( $OBJECTS(.gdtl) $LIBRARIES(.gdtl))
+                } > seg_dmda
+#endif
+
         seg_dmda
         {
             INPUT_SECTIONS( $OBJECTS(seg_dmda) $LIBRARIES(seg_dmda))
         } > seg_dmda
 
+#ifdef __cplusplus
+    .eh
+    {
+      INPUT_SECTIONS( $OBJECTS(.frt) $LIBRARIES(.frt))
+      INPUT_SECTIONS( $OBJECTS(.rtti) $LIBRARIES(.rtti))
+      INPUT_SECTIONS( $OBJECTS(.cht) $LIBRARIES(.cht))
+      INPUT_SECTIONS( $OBJECTS(.edt) $LIBRARIES(.edt))
+      INPUT_SECTIONS( $OBJECTS(seg_vtbl) $LIBRARIES(seg_vtbl))
+    } > seg_dmda
+#endif
 
         stackseg
         {
@@ -226,14 +283,17 @@ PROCESSOR p0
             // allocate a heap for the application
             ldf_heap_space = .;
             ldf_heap_length = MEMORY_SIZEOF(seg_heap);
-            ldf_heap_end = ldf_heap_space + ldf_heap_length - 1;       
+            ldf_heap_end = ldf_heap_space + ldf_heap_length - 1;
         } > seg_heap
         
-        
-        
-        seg_sdram 
+        seg_sram
         {
-            INPUT_SECTIONS($OBJECTS(seg_sdram)  $LIBRARIES(seg_dmda))
+            INPUT_SECTIONS($OBJECTS(seg_sram) $LIBRARIES(seg_sram))
+        } > seg_sram
+
+        seg_sdram
+        {
+           INPUT_SECTIONS($OBJECTS(seg_sdram) $LIBRARIES(seg_sdram))
         } > seg_sdram
     }
 }
