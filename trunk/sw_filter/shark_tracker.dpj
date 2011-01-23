@@ -83,7 +83,7 @@
 		</folder>
 		<folder name="Linker Files" ext=".ldf,.dlb">
 			<files>
-				<file name="$(ADI_DSP)\213xx\ldf\ADSP-21369_ASM.LDF">
+				<file name=".\ADSP-21369_ASM_DANVILLE.LDF">
 					<file-configurations>
 						<file-configuration name="Debug">
 							<excluded-flag value="no"/>
