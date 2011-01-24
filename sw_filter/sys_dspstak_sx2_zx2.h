@@ -170,8 +170,8 @@ extern void declared_expansion_spi_ss;
 // 1293 = 4us           (base)
 // 1616 = 5us	200ksps (73khz hydrophone)
 // 6465 = 20us	 50ksps (test)
-#define TPERIOD_VAL		64650
-#define TCOUNT_VAL		64650
+#define TPERIOD_VAL		6465
+#define TCOUNT_VAL		6465
 #endif	
 
 #define NO_SDRAM		0
