@@ -36,7 +36,7 @@ RM=cmd /C del /F /Q
 
 ifeq ($(MAKECMDGOALS),SharkTracker_Debug)
 
-SharkTracker_Debug : ./Debug/SharkTracker.dxe 
+SharkTracker_Debug : ../../../../../Program\ Files/TTERMPRO/shark.ldr 
 
 ./Debug/ivt_dspstak_sx2_zx2.doj :./ivt_dspstak_sx2_zx2.asm 
 	@echo ".\ivt_dspstak_sx2_zx2.asm"
@@ -50,7 +50,7 @@ SharkTracker_Debug : ./Debug/SharkTracker.dxe
 	@echo ".\memory_dspstak_sx2_zx2.asm"
 	$(VDSP)/easm21k.exe .\memory_dspstak_sx2_zx2.asm -proc ADSP-21369 -file-attr ProjectName=SharkTracker -g -o .\Debug\memory_dspstak_sx2_zx2.doj -MM
 
-Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/213xx/include/complex.h init.h uart.h signal.h sys.h 
+Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/213xx/include/complex.h $(VDSP)/213xx/include/signal.h $(VDSP)/213xx/include/stdio.h $(VDSP)/213xx/include/stdio_21xxx.h $(VDSP)/213xx/include/processor_include.h $(VDSP)/213xx/include/21369.h $(VDSP)/213xx/include/21364.h $(VDSP)/213xx/include/platform_include.h $(VDSP)/213xx/include/Cdef21369.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/builtins.h $(VDSP)/213xx/include/sys/builtins_support.h init.h uart.h sharc.h sys.h $(VDSP)/213xx/include/def21369.h $(VDSP)/213xx/include/platform_include.h 
 	@echo ".\SharkTracker.c"
 	$(VDSP)/cc21k.exe -c .\SharkTracker.c -file-attr ProjectName=SharkTracker -g -structs-do-not-overlap -no-multiline -double-size-32 -warn-protos -proc ADSP-21369 -o .\Debug\SharkTracker.doj -MM
 
@@ -74,6 +74,10 @@ Debug/SharkTracker.doj :SharkTracker.c $(VDSP)/213xx/include/filter.h $(VDSP)/21
 	@echo "Linking..."
 	$(VDSP)/cc21k.exe .\Debug\ivt_dspstak_sx2_zx2.doj .\Debug\m_dspstak_sx2_zx2.doj .\Debug\memory_dspstak_sx2_zx2.doj .\Debug\SharkTracker.doj .\Debug\signal_dspstak_sx2_zx2.doj .\Debug\spi_dspstak_sx2_zx2.doj .\Debug\sys_dspstak_sx2_zx2.doj .\Debug\uart_dspstak_sx2_zx2.doj -T .\ADSP-21369.LDF -L .\Debug -add-debug-libpaths -flags-link -od,.\Debug -o .\Debug\SharkTracker.dxe -proc ADSP-21369 -flags-link -MM
 
+../../../../../Program\ Files/TTERMPRO/shark.ldr :./Debug/SharkTracker.dxe $(VDSP)/213xx/ldr/369_spi.dxe 
+	@echo "Creating loader file..."
+	$(VDSP)/elfloader.exe -bspislave -fBinary -HostWidth8 -l $(VDSP)\213xx\ldr\369_spi.dxe .\Debug\SharkTracker.dxe -o C:\Program\ Files\TTERMPRO\shark.ldr -proc ADSP-21369 -MM
+
 endif
 
 ifeq ($(MAKECMDGOALS),SharkTracker_Debug_clean)
@@ -88,6 +92,7 @@ SharkTracker_Debug_clean:
 	-$(RM) ".\Debug\sys_dspstak_sx2_zx2.doj"
 	-$(RM) ".\Debug\uart_dspstak_sx2_zx2.doj"
 	-$(RM) ".\Debug\SharkTracker.dxe"
+	-$(RM) "..\..\..\..\..\Program Files\TTERMPRO\shark.ldr"
 	-$(RM) ".\Debug\*.ipa"
 	-$(RM) ".\Debug\*.opa"
 	-$(RM) ".\Debug\*.ti"
