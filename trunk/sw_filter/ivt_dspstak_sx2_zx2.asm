@@ -49,7 +49,7 @@ __SOVFI:        // 0x0C: Status loop or mode stack overflow or PC stack full
 
 __TMZHI:        // 0x10: Core timer interrupt (higher priority option)
         nop;    // <-- (this line is not executed)
-       jump _timer_isr;
+        nop;
         nop;
         nop;
 

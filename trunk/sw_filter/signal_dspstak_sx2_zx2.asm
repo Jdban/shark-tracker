@@ -22,6 +22,8 @@
 
 .GLOBAL _get_adc1_ch0;
 .GLOBAL _init_signal_processing;
+.GLOBAL _adc1_ch0_msb;
+.GLOBAL _adc1_ch0_lsb;
 
 .SECTION /DM seg_dmda;
 
@@ -42,6 +44,8 @@
 
 // SPI Signal Receive Buffer
 .VAR adc1_ch0_receive_buffer[SIGNAL_READ_BUFF];
+.VAR _adc1_ch0_msb;
+.VAR _adc1_ch0_lsb;
 
 // SPI Message
 .VAR adc1_ch0_start[4]=
@@ -124,7 +128,10 @@ _get_adc1_ch0:
 	CALL _spi_add_queue;
 	CALL _complete_mem_spi_transfer;
 	
+	r0 = DM(adc1_ch0_receive_buffer+2);
+	DM(_adc1_ch0_msb) = r0;
 	r0 = DM(adc1_ch0_receive_buffer+3);
-
+	DM(_adc1_ch0_lsb) = r0;
+	
 	exit;
 _get_adc1_ch0.end:
