@@ -201,6 +201,8 @@
 			<files>
 				<file name=".\init.h">
 				</file>
+				<file name=".\sharc.h">
+				</file>
 				<file name=".\spi.h">
 				</file>
 				<file name=".\sys.h">

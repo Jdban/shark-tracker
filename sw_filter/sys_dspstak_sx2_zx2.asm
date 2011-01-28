@@ -71,8 +71,6 @@
 .GLOBAL _spi_miso_enable_status;
 .GLOBAL _declared_expansion_spi_ss;			
 
-.GLOBAL _process_signal_ready;
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //	This code library incorporates majority of the support needed to manage a basic dspstak

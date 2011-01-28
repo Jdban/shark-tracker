@@ -126,7 +126,7 @@ initialize_all_peripherals:
 	CALL _init_ext_port;			// initialize external AMI port and sdram controller registers 
 	CALL _init_spi_port;			// initialize spi port
 	CALL _init_signal_processing;
-	CALL _init_timer;
+//	CALL _init_timer;
 	
 // Here is the section where user declare the functionality of the 
 // IOx/SSx pins with respect to the din connection.		
