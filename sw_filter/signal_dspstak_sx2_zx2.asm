@@ -51,7 +51,7 @@
 .VAR adc1_ch0_start[4]=
 	SPI_ADC1_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
 	0x01,							// Start Bit
-	0x80,						 	// Signal = 1, 00 = CH0
+	0x00,						 	// Signal = 1, 00 = CH0
 	0x00;						
 		
 .SECTION/PM seg_pmco;
@@ -135,3 +135,5 @@ _get_adc1_ch0:
 	
 	exit;
 _get_adc1_ch0.end:
+
+
