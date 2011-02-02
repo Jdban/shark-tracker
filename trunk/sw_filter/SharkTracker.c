@@ -16,6 +16,10 @@ char buf[256];
 
 #define SAMPLES 100
 #define TAPS_B 170
+
+#define ZERO_THRESHOLD 1000
+#define ONE_THRESHOLD 5
+
 float pm b[170] = {
   0.0003095621942,0.0005279468605,-0.0002953880175,-8.825003533e-006,0.0003792401403,
   -0.0005839442019,0.0003824750311,0.0002175050322,-0.0008596457774, 0.001021481818,
@@ -95,6 +99,8 @@ void timer_handler(int signal)
 
 void main(void)
 {	
+	uint32_t zeroCount = 0;
+	uint32_t oneCount = 0;
 	initialize();
 	initialize_fir();
 	
@@ -119,7 +125,7 @@ void main(void)
 			adc_voltage <<= 8;
 			adc_voltage |= adc1_ch0_lsb;
 			adc_voltage &= 0x000003FF;
-			h1_in[samplesTaken++] = adc_voltage * 3.3f / 2048.0f;
+			h1_in[samplesTaken++] = adc_voltage * 5.0f / 2048.0f;
 			//get_adc1_ch0();
 			
 			if (samplesTaken >= SAMPLES)
@@ -136,13 +142,26 @@ void main(void)
 				 **/
 				fir (h1_in, h1_out_b, b, h1_state_b, SAMPLES, TAPS_B);
 				
+				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
 				{
-					if (h1_out_b[i] > 0.6f)
+					if (h1_out_b[i] > 0.001f && h1_in[i] * 0.01f < h1_out_b[i])
 					{
-						uart_write("1");
-						uart_update(); 
-						break;
+						if (zeroCount != 0)
+							zeroCount = ZERO_THRESHOLD;
+						
+						if (++oneCount > ONE_THRESHOLD && zeroCount == 0)
+						{
+							zeroCount = ZERO_THRESHOLD;
+							uart_write("p");
+							uart_update();
+							break;
+						}
+					}
+					else
+					{
+						if (zeroCount != 0)
+							zeroCount--;
 					}
 				}
 			}
