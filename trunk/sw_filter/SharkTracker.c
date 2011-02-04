@@ -6,6 +6,9 @@
 #include "init.h"
 #include "uart.h"
 #include "sharc.h"
+#include <cycles.h>
+#include <cycle_count.h>
+#include <time.h>
  
 // TODO: Channel 1
 // TODO: Tolerance Length
@@ -13,6 +16,9 @@
 // TODO: Stop reading for ping duration after ping is detected
 
 char buf[256];
+
+#define FILTER_THRESHOLD 0.001f
+#define RATIO_THRESHOLD 0.01f
 
 #define SAMPLES 100
 #define TAPS_B 170
@@ -99,10 +105,14 @@ void timer_handler(int signal)
 
 void main(void)
 {	
+	cycle_t start_count;				
+	cycle_t final_count;
+	double secs = 0;
 	uint32_t zeroCount = 0;
 	uint32_t oneCount = 0;
 	initialize();
 	initialize_fir();
+	uint32_t functionruns = 0;
 	
 	interrupt(SIG_TMZ, timer_handler);
 	timer_set((unsigned int)1702, (unsigned int)1702);
@@ -115,9 +125,27 @@ void main(void)
 	
 	for(;;)
 	{
+			STOP_CYCLE_COUNT(final_count, start_count);
+			START_CYCLE_COUNT(start_count);
+			secs += ((double) final_count) / CLOCKS_PER_SEC ;	    
+		
+		if(functionruns > 10000)
+		{
+
+			snprintf(buf, 256, "%lf\r\n", 1 / secs * 10000);
+			uart_write(buf);
+			uart_update();
+			uart_update();
+			uart_update();
+			uart_update();
+			secs = 0;
+			functionruns = 0;
+		}
+
 		// Check if we are ready to sample
 		if (process_signal_ready)
 		{
+			functionruns++;
 			// Get Hydrophone 1 Voltage
 			process_signal_ready = 0;
 			get_adc1_ch0();
@@ -145,13 +173,14 @@ void main(void)
 				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
 				{
-					if (h1_out_b[i] > 0.001f && h1_in[i] * 0.01f < h1_out_b[i])
+					if (h1_out_b[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out_b[i])
 					{
 						if (zeroCount != 0)
 							zeroCount = ZERO_THRESHOLD;
 						
 						if (++oneCount > ONE_THRESHOLD && zeroCount == 0)
 						{
+							
 							zeroCount = ZERO_THRESHOLD;
 							uart_write("p");
 							uart_update();
@@ -169,8 +198,6 @@ void main(void)
 		}
 	}
 }
-
-
 					/**snprintf(buf, 256, "I: %f O: %f\r\n", h1_in[i], h1_out_b[i] * 100);
 						uart_write(buf);
 						uart_update();
