@@ -131,8 +131,8 @@ initialize_all_peripherals:
 // Here is the section where user declare the functionality of the 
 // IOx/SSx pins with respect to the din connection.		
 // At reset, these pins are input pins.
-	r4 = TYPE_IO0	| 	TYPE_IO1 	| 	TYPE_IO2		|	TYPE_IO3 	|	TYPE_IO4;											
-	r8 = IO0_DIR_IN	|	IO1_DIR_IN	| 	IO2_DIR_IN		|	IO3_DIR_IN	|	IO4_DIR_IN;
+	r4 = TYPE_SPI1	| 	TYPE_IO1 	| 	TYPE_IO2		|	TYPE_IO3 	|	TYPE_IO4;											
+	r8 = IO0_DIR_OUT	|	IO1_DIR_IN	| 	IO2_DIR_IN		|	IO3_DIR_IN	|	IO4_DIR_IN;
 	CALL _sys_assign_pins;
 
 send_system_opening_strings:		
