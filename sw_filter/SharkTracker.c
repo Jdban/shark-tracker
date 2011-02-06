@@ -9,11 +9,6 @@
 #include <cycles.h>
 #include <cycle_count.h>
 #include <time.h>
- 
-// TODO: Channel 1
-// TODO: Tolerance Length
-// TODO: Log when a ping is received
-// TODO: Stop reading for ping duration after ping is detected
 
 char buf[256];
 
@@ -21,10 +16,10 @@ char buf[256];
 #define RATIO_THRESHOLD 0.01f
 
 #define SAMPLES 100
-#define TAPS_B 170
+#define TAPS 170
 
-#define ZERO_THRESHOLD 1000
-#define ONE_THRESHOLD 5
+#define ZERO_THRESHOLD 1
+#define ONE_THRESHOLD 1
 
 float pm b[170] = {
   0.0003095621942,0.0005279468605,-0.0002953880175,-8.825003533e-006,0.0003792401403,
@@ -63,14 +58,13 @@ float pm b[170] = {
   0.0003792401403,-8.825003533e-006,-0.0002953880175,0.0005279468605,0.0003095621942
 };
 
-float dm h1_in[SAMPLES], h1_out_b[SAMPLES];
-float dm h1_state_b[TAPS_B+1];
+float dm h1_in[SAMPLES], h1_out[SAMPLES], h2_in[SAMPLES], h2_out[SAMPLES];
+float dm h1_state[TAPS+1], h2_state[TAPS+1];
 uint32_t dm adc_voltage;
 uint32_t dm counter = 0;
 uint32_t process_signal_ready = 0;
 uint32_t samplesTaken = 0;
 int i;
-float lastVoltage = 0.0f;
 
 void flipArray(float *arr, int size)
 {
@@ -90,12 +84,14 @@ void initialize_fir(void)
 	int i;
 	
 	// Initialize the state arrays
-	for (i = 0; i < TAPS_B+1; i++)
+	for (i = 0; i < TAPS+1; i++)
 	{
-		h1_state_b[i] = 0;
+		h1_state[i] = 0;
+		h2_state[i] = 0;
 	}	
 	
-	flipArray(b, TAPS_B);
+	// Flip coefficiants
+	flipArray(b, TAPS);
 }
 
 void timer_handler(int signal)
@@ -108,11 +104,11 @@ void main(void)
 	cycle_t start_count;				
 	cycle_t final_count;
 	double secs = 0;
-	uint32_t zeroCount = 0;
+	uint32_t zeroCount1 = 0, zeroCount2 = 0;
 	uint32_t oneCount = 0;
+	
 	initialize();
 	initialize_fir();
-	uint32_t functionruns = 0;
 	
 	interrupt(SIG_TMZ, timer_handler);
 	timer_set((unsigned int)1702, (unsigned int)1702);
@@ -125,72 +121,81 @@ void main(void)
 	
 	for(;;)
 	{
-			STOP_CYCLE_COUNT(final_count, start_count);
-			START_CYCLE_COUNT(start_count);
-			secs += ((double) final_count) / CLOCKS_PER_SEC ;	    
-		
-		if(functionruns > 10000)
-		{
-
-			snprintf(buf, 256, "%lf\r\n", 1 / secs * 10000);
-			uart_write(buf);
-			uart_update();
-			uart_update();
-			uart_update();
-			uart_update();
-			secs = 0;
-			functionruns = 0;
-		}
+		//STOP_CYCLE_COUNT(final_count, start_count);
+		//START_CYCLE_COUNT(start_count);
+		//secs += ((double) final_count) / CLOCKS_PER_SEC ;	    
 
 		// Check if we are ready to sample
 		if (process_signal_ready)
 		{
-			functionruns++;
 			// Get Hydrophone 1 Voltage
 			process_signal_ready = 0;
+			
+			// Get voltages
+			get_adc2_ch0();
+			adc_voltage = adc2_ch0_msb;
+			adc_voltage <<= 8;
+			adc_voltage |= adc2_ch0_lsb;
+			adc_voltage &= 0x000003FF;
+			h1_in[samplesTaken] = adc_voltage * 5.0f / 2048.0f;
 			get_adc1_ch0();
 			adc_voltage = adc1_ch0_msb;
 			adc_voltage <<= 8;
 			adc_voltage |= adc1_ch0_lsb;
 			adc_voltage &= 0x000003FF;
-			h1_in[samplesTaken++] = adc_voltage * 5.0f / 2048.0f;
-			//get_adc1_ch0();
+			h2_in[samplesTaken++] = adc_voltage * 5.0f / 2048.0f;
 			
+			// Filter
 			if (samplesTaken >= SAMPLES)
 			{
 				samplesTaken = 0;
 				
-				/** Filter
-				 *	float *fir (const float dm input[],
-				 *				float dm output[],
-				 *				const float pm coeffs[],
-				 *				float dm state[],
-				 *				int samples,
-				 *				int taps);
-				 **/
-				fir (h1_in, h1_out_b, b, h1_state_b, SAMPLES, TAPS_B);
-				
+				fir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
+				fir (h2_in, h2_out, b, h2_state, SAMPLES, TAPS);
+
 				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
 				{
-					if (h1_out_b[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out_b[i])
+					if (h1_out[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out[i])
 					{
-						if (zeroCount != 0)
-							zeroCount = ZERO_THRESHOLD;
+						if (zeroCount1 != 0)
+							zeroCount1 = ZERO_THRESHOLD;
 						
-						if (++oneCount > ONE_THRESHOLD && zeroCount == 0)
+						if (++oneCount > ONE_THRESHOLD && zeroCount1 == 0)
 						{
-							
-							zeroCount = ZERO_THRESHOLD;
-							uart_write("p");
+							zeroCount1 = ZERO_THRESHOLD;
+							uart_write("1");
 							uart_update();
 							break;
 						}
 					}
 					else
 					{
-						if (zeroCount != 0)
-							zeroCount--;
+						if (zeroCount1 != 0)
+							zeroCount1--;
+					}
+				}
+				
+				oneCount = 0;
+				for (i = 0; i < SAMPLES; i++)
+				{
+					if (h2_out[i] > FILTER_THRESHOLD && h2_in[i] * RATIO_THRESHOLD < h2_out[i])
+					{
+						if (zeroCount2 != 0)
+							zeroCount2 = ZERO_THRESHOLD;
+						
+						if (++oneCount > ONE_THRESHOLD && zeroCount2 == 0)
+						{
+							zeroCount2 = ZERO_THRESHOLD;
+							uart_write("2");
+							uart_update();
+							break;
+						}
+					}
+					else
+					{
+						if (zeroCount2 != 0)
+							zeroCount2--;
 					}
 				}
 			}

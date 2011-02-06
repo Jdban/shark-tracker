@@ -25,11 +25,16 @@
 .GLOBAL _adc1_ch0_msb;
 .GLOBAL _adc1_ch0_lsb;
 
+.GLOBAL _get_adc2_ch0;
+.GLOBAL _adc2_ch0_msb;
+.GLOBAL _adc2_ch0_lsb;
+
 .SECTION /DM seg_dmda;
 
-#define SPI_ADC1_CH0 SPI_DEVICE_11
+#define SPI_ADC1_CH0 SPI_DEVICE_13
+#define SPI_ADC2_CH0 SPI_DEVICE_12
 
-// SPI Signal Settings
+// SPI 1 Signal Settings
 .VAR adc1_ch0_device_settings[3] =
 	SPI_BAUD_10MHZ,						// SPI baud for flash
 	SPI_SEL_SS0,						// slave select flag
@@ -52,7 +57,33 @@
 	SPI_ADC1_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
 	0x01,							// Start Bit
 	0x00,						 	// Signal = 1, 00 = CH0
+	0x00;
+	
+	// SPI 2 Signal Settings
+.VAR adc2_ch0_device_settings[3] =
+	SPI_BAUD_10MHZ,						// SPI baud for flash
+	SPI_SEL_SS1,						// slave select flag
+	SPIMS | 							// Master mode (internal SPICLK) 
+	SPIEN| 								// Enable SPI port 
+	TIMOD1|								// transfer mode 1
+	MSBF|								// send MSB first
+	CPHASE|								// control CS manually
+	CLKPL |								
+	WL8 |								// 8 bit transfer
+	SENDZ; 								// send zero if transmission buffer is empty
+
+// SPI Signal Receive Buffer
+.VAR adc2_ch0_receive_buffer[SIGNAL_READ_BUFF];
+.VAR _adc2_ch0_msb;
+.VAR _adc2_ch0_lsb;
+
+// SPI Message
+.VAR adc2_ch0_start[4]=
+	SPI_ADC2_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
+	0x01,							// Start Bit
+	0x00,						 	// Signal = 1, 00 = CH0
 	0x00;						
+								
 		
 .SECTION/PM seg_pmco;
 
@@ -68,6 +99,13 @@ _init_signal_processing:
     r4  = SPI_ADC1_CH0;				    // SPI Device Number	
 	r8  = adc1_ch0_device_settings;		// SPI device parameters
 	r12 = adc1_ch0_receive_buffer;	    // Buffer used for each individual byte 
+	
+	CALL _init_spi_device;				// declare device parameters for flash in
+										// spi protocol
+										
+    r4  = SPI_ADC2_CH0;				    // SPI Device Number	
+	r8  = adc2_ch0_device_settings;		// SPI device parameters
+	r12 = adc2_ch0_receive_buffer;	    // Buffer used for each individual byte 
 	
 	CALL _init_spi_device;				// declare device parameters for flash in
 										// spi protocol
@@ -105,7 +143,6 @@ force_mem_spi_loop:
 	IF NE JUMP force_mem_spi_loop;
 	
 	RTS;	
-	
 _complete_mem_spi_transfer.end:
 
 /////////////////////////////////////////////////////////////////////////
@@ -135,5 +172,20 @@ _get_adc1_ch0:
 	
 	exit;
 _get_adc1_ch0.end:
+
+_get_adc2_ch0:
+	entry;
+	
+    r4 = adc2_ch0_start;		 	// send the get channel 1 command
+	CALL _spi_add_queue;
+	CALL _complete_mem_spi_transfer;
+	
+	r0 = DM(adc2_ch0_receive_buffer+2);
+	DM(_adc2_ch0_msb) = r0;
+	r0 = DM(adc2_ch0_receive_buffer+3);
+	DM(_adc2_ch0_lsb) = r0;
+	
+	exit;
+_get_adc2_ch0.end:
 
 
