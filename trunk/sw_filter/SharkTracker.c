@@ -60,7 +60,7 @@ float pm b[170] = {
 
 float dm h1_in[SAMPLES], h1_out[SAMPLES], h2_in[SAMPLES], h2_out[SAMPLES];
 float dm h1_state[TAPS+1], h2_state[TAPS+1];
-uint32_t dm adc_voltage;
+uint32_t dm adc_voltage1, adc_voltage2;
 uint32_t dm counter = 0;
 uint32_t process_signal_ready = 0;
 uint32_t samplesTaken = 0;
@@ -132,19 +132,21 @@ void main(void)
 			process_signal_ready = 0;
 			
 			// Get voltages
-			get_adc2_ch0();
-			adc_voltage = adc2_ch0_msb;
-			adc_voltage <<= 8;
-			adc_voltage |= adc2_ch0_lsb;
-			adc_voltage &= 0x000003FF;
-			h1_in[samplesTaken] = adc_voltage * 5.0f / 2048.0f;
 			get_adc1_ch0();
-			adc_voltage = adc1_ch0_msb;
-			adc_voltage <<= 8;
-			adc_voltage |= adc1_ch0_lsb;
-			adc_voltage &= 0x000003FF;
-			h2_in[samplesTaken++] = adc_voltage * 5.0f / 2048.0f;
+			adc_voltage1 = adc1_ch0_msb;
+			adc_voltage1 <<= 8;
+			adc_voltage1 |= adc1_ch0_lsb;
+			adc_voltage1 &= 0x000003FF;
+			h1_in[samplesTaken] = adc_voltage1 * 5.0f / 2048.0f;
 			
+			get_adc2_ch0();
+			adc_voltage2 = adc2_ch0_msb;
+			adc_voltage2 <<= 8;
+			adc_voltage2 |= adc2_ch0_lsb;
+			adc_voltage2 &= 0x000003FF;
+			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 2048.0f;
+			
+			++samplesTaken;
 			// Filter
 			if (samplesTaken >= SAMPLES)
 			{
@@ -155,7 +157,7 @@ void main(void)
 
 				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
-				{
+				{	
 					if (h1_out[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out[i])
 					{
 						if (zeroCount1 != 0)

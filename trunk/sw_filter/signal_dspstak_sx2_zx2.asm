@@ -37,7 +37,7 @@
 // SPI 1 Signal Settings
 .VAR adc1_ch0_device_settings[3] =
 	SPI_BAUD_10MHZ,						// SPI baud for flash
-	SPI_SEL_SS0,						// slave select flag
+	SPI_SEL_SS1,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
 	TIMOD1|								// transfer mode 1
@@ -81,7 +81,7 @@
 .VAR adc2_ch0_start[4]=
 	SPI_ADC2_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
 	0x01,							// Start Bit
-	0x00,						 	// Signal = 1, 00 = CH0
+	0x20,						 	// Signal = 1, 00 = CH0
 	0x00;						
 								
 		
@@ -143,6 +143,7 @@ force_mem_spi_loop:
 	IF NE JUMP force_mem_spi_loop;
 	
 	RTS;	
+	
 _complete_mem_spi_transfer.end:
 
 /////////////////////////////////////////////////////////////////////////
@@ -178,7 +179,7 @@ _get_adc2_ch0:
 	
     r4 = adc2_ch0_start;		 	// send the get channel 1 command
 	CALL _spi_add_queue;
-	CALL _complete_mem_spi_transfer;
+//	CALL _complete_mem_spi_transfer;
 	
 	r0 = DM(adc2_ch0_receive_buffer+2);
 	DM(_adc2_ch0_msb) = r0;
