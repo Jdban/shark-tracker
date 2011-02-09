@@ -12,8 +12,8 @@
 
 char buf[256];
 
-#define FILTER_THRESHOLD 0.001f
-#define RATIO_THRESHOLD 0.01f
+#define FILTER_THRESHOLD 0.0001f
+#define RATIO_THRESHOLD 0.001f
 
 #define SAMPLES 100
 #define TAPS 170
@@ -64,6 +64,7 @@ uint32_t dm adc_voltage1, adc_voltage2;
 uint32_t dm counter = 0;
 uint32_t process_signal_ready = 0;
 uint32_t samplesTaken = 0;
+uint32_t dm functionruns = 0;
 int i;
 
 void flipArray(float *arr, int size)
@@ -121,13 +122,30 @@ void main(void)
 	
 	for(;;)
 	{
-		//STOP_CYCLE_COUNT(final_count, start_count);
-		//START_CYCLE_COUNT(start_count);
-		//secs += ((double) final_count) / CLOCKS_PER_SEC ;	    
+                        STOP_CYCLE_COUNT(final_count, start_count);
+                        START_CYCLE_COUNT(start_count);
+                        secs += ((double) final_count) / CLOCKS_PER_SEC ;           
+                
+                if(functionruns > 10000)
+                {
+                   /**
+                        snprintf(buf, 256, "%lf\r\n", 1 / secs * 10000);
+                        uart_write(buf);
+                        uart_update();
+                        uart_update();
+                        uart_update();
+                        uart_update();
+                        secs = 0;
+                        functionruns = 0;
+                   **/
+                }
+
 
 		// Check if we are ready to sample
 		if (process_signal_ready)
 		{
+			functionruns++;
+			
 			// Get Hydrophone 1 Voltage
 			process_signal_ready = 0;
 			
@@ -139,7 +157,7 @@ void main(void)
 			adc_voltage1 &= 0x000003FF;
 			h1_in[samplesTaken] = adc_voltage1 * 5.0f / 2048.0f;
 			
-			get_adc2_ch0();
+//			get_adc2_ch0();
 			adc_voltage2 = adc2_ch0_msb;
 			adc_voltage2 <<= 8;
 			adc_voltage2 |= adc2_ch0_lsb;
@@ -166,7 +184,9 @@ void main(void)
 						if (++oneCount > ONE_THRESHOLD && zeroCount1 == 0)
 						{
 							zeroCount1 = ZERO_THRESHOLD;
-							uart_write("1");
+							uart_write("p\r\n");
+							uart_update();
+							uart_update();
 							uart_update();
 							break;
 						}
@@ -189,7 +209,9 @@ void main(void)
 						if (++oneCount > ONE_THRESHOLD && zeroCount2 == 0)
 						{
 							zeroCount2 = ZERO_THRESHOLD;
-							uart_write("2");
+							uart_write("2\r\n");
+							uart_update();
+							uart_update();
 							uart_update();
 							break;
 						}
