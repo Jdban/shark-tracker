@@ -36,8 +36,8 @@
 
 // SPI 1 Signal Settings
 .VAR adc1_ch0_device_settings[3] =
-	SPI_BAUD_10MHZ,						// SPI baud for flash
-	SPI_SEL_SS1,						// slave select flag
+	SPI_BAUD_15MHZ,						// SPI baud for flash
+	SPI_SEL_SS0,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
 	TIMOD1|								// transfer mode 1
@@ -61,7 +61,7 @@
 	
 	// SPI 2 Signal Settings
 .VAR adc2_ch0_device_settings[3] =
-	SPI_BAUD_10MHZ,						// SPI baud for flash
+	SPI_BAUD_15MHZ,						// SPI baud for flash
 	SPI_SEL_SS1,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
@@ -81,7 +81,7 @@
 .VAR adc2_ch0_start[4]=
 	SPI_ADC2_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
 	0x01,							// Start Bit
-	0x20,						 	// Signal = 1, 00 = CH0
+	0x00,						 	// Signal = 1, 00 = CH0
 	0x00;						
 								
 		
