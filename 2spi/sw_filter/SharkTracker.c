@@ -12,14 +12,13 @@
 
 char buf[256];
 
-#define FILTER_THRESHOLD 0.0001f
-#define RATIO_THRESHOLD 0.001f
+#define FILTER_THRESHOLD 0.0005f
+#define RATIO_THRESHOLD 0.005f
+#define ZERO_THRESHOLD 150
+#define ONE_THRESHOLD 5
 
 #define SAMPLES 100
 #define TAPS 95
-
-#define ZERO_THRESHOLD 1
-#define ONE_THRESHOLD 1
 
 float pm b[95] = {
   3.728714364e-005,-0.0003015170805, 0.000762636133,-0.001547353226, 0.002608923009,
@@ -85,6 +84,25 @@ void timer_handler(int signal)
 	process_signal_ready = 1;
 }
 
+#define stopCount() \
+				STOP_CYCLE_COUNT(final_count, start_count); \
+                secs = ((double) final_count) / CLOCKS_PER_SEC ; \
+				functionruns++; \
+						snprintf(buf, 256, "%lf\r\n", secs); \
+                        uart_write(buf); \
+				        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+						uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        uart_update(); \
+                        secs = 0; 
+
 void main(void)
 {	
 	cycle_t start_count;				
@@ -92,6 +110,7 @@ void main(void)
 	double secs = 0;
 	uint32_t zeroCount1 = 0, zeroCount2 = 0;
 	uint32_t oneCount = 0;
+	char firstHit = 0, secondHit = 0;
 	
 	initialize();
 	initialize_fir();
@@ -151,6 +170,7 @@ void main(void)
 			// Filter
 			if (samplesTaken >= SAMPLES)
 			{
+				/**
 				STOP_CYCLE_COUNT(final_count, start_count);
                 secs += ((double) final_count) / CLOCKS_PER_SEC ;
 				functionruns++;
@@ -168,36 +188,96 @@ void main(void)
                         uart_update();
                         secs = 0;
                         functionruns = 0;
-                }
+                }**/
 
 				samplesTaken = 0;
 				
 				fir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
 				fir (h2_in, h2_out, b, h2_state, SAMPLES, TAPS);
 
+				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
 				{	
-					if (h1_out[i] > 0.001f && h1_in[i] * 0.01f < h1_out[i])
+					if (h1_out[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out[i])
                     {
-                    	uart_write("1");
-                    	uart_update(); 
-                    	break;
+                    	if (zeroCount1 < ZERO_THRESHOLD) 
+                    	{
+                    		zeroCount1 = 0;
+                    	}
+                    	else 
+                    	{
+	                    	oneCount++;
+                    		if (oneCount > ONE_THRESHOLD)
+                    		{
+		                    	//uart_write("1");
+		                    	//uart_update(); 
+		                    	zeroCount1 = 0;
+		                    	oneCount = 0;
+		                    	
+		                    	firstHit = 1;
+		                    	if (secondHit)
+		                    	{
+		                    		firstHit = 0;
+		                    		secondHit = 0;
+									stopCount();
+		                    	}
+		                    	else
+		                    	{
+		                    		START_CYCLE_COUNT(start_count);	
+		                    	}
+		                    	
+		                    	break;
+                    		}
+                    	}
                    	}
-
+                   	else
+                   	{
+						zeroCount1++;
+                   	}
 				}
 				
+				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
 				{
-                	if (h2_out[i] > 0.001f && h2_in[i] * 0.01f < h2_out[i])
+					if (h2_out[i] > FILTER_THRESHOLD && h2_in[i] * RATIO_THRESHOLD < h2_out[i])
                     {
-                    	uart_write("2");
-                    	uart_update(); 
-                     	break;
-                    }
-
+                    	if (zeroCount2 < ZERO_THRESHOLD) 
+                    	{
+                    		zeroCount2 = 0;
+                    	}
+                    	else 
+                    	{
+	                    	oneCount++;
+                    		if (oneCount > ONE_THRESHOLD)
+                    		{
+		                    	//uart_write("2");
+		                    	//uart_update(); uart_update(); uart_update(); 
+		                    	zeroCount2 = 0;
+		                    	oneCount = 0;
+		                    	
+		                    	secondHit = 1;
+		                    	if (firstHit)
+		                    	{
+		                    		firstHit = 0;
+		                    		secondHit = 0;
+									stopCount();
+		                    	}
+		                    	else
+		                    	{
+		                    		START_CYCLE_COUNT(start_count);	
+		                    	}
+		                    	
+		                    	break;
+                    		}
+                    	}
+                   	}
+                   	else
+                   	{
+						zeroCount2++;
+                   	}
 				}
 				
-                START_CYCLE_COUNT(start_count);
+                //START_CYCLE_COUNT(start_count);
 			}
 			
 		}
