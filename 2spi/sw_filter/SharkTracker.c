@@ -151,6 +151,25 @@ void main(void)
 			// Filter
 			if (samplesTaken >= SAMPLES)
 			{
+				STOP_CYCLE_COUNT(final_count, start_count);
+                secs += ((double) final_count) / CLOCKS_PER_SEC ;
+				functionruns++;
+				if(functionruns > 10000)
+                {      
+						snprintf(buf, 256, "\r\n%lf\r\n", secs / SAMPLES);
+                        uart_write(buf);
+				        uart_update();
+                        uart_update();
+                        uart_update();
+                        uart_update();
+						uart_update();
+                        uart_update();
+                        uart_update();
+                        uart_update();
+                        secs = 0;
+                        functionruns = 0;
+                }
+
 				samplesTaken = 0;
 				
 				fir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
@@ -158,25 +177,27 @@ void main(void)
 
 				for (i = 0; i < SAMPLES; i++)
 				{	
-                                        if (h1_out[i] > 0.001f && h1_in[i] * 0.01f < h1_out[i])
-                                        {
-                                                uart_write("1");
-                                                uart_update(); 
-                                                break;
-                                        }
+					if (h1_out[i] > 0.001f && h1_in[i] * 0.01f < h1_out[i])
+                    {
+                    	uart_write("1");
+                    	uart_update(); 
+                    	break;
+                   	}
 
 				}
 				
 				for (i = 0; i < SAMPLES; i++)
 				{
-                                        if (h2_out[i] > 0.001f && h2_in[i] * 0.01f < h2_out[i])
-                                        {
-                                                uart_write("2");
-                                                uart_update(); 
-                                                break;
-                                        }
+                	if (h2_out[i] > 0.001f && h2_in[i] * 0.01f < h2_out[i])
+                    {
+                    	uart_write("2");
+                    	uart_update(); 
+                     	break;
+                    }
 
 				}
+				
+                START_CYCLE_COUNT(start_count);
 			}
 			
 		}
