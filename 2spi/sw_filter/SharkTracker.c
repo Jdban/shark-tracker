@@ -155,15 +155,26 @@ void main(void)
 			adc_voltage1 = adc1_ch0_msb;
 			adc_voltage1 <<= 8;
 			adc_voltage1 |= adc1_ch0_lsb;
-			adc_voltage1 &= 0x000003FF;
-			h1_in[samplesTaken] = adc_voltage1 * 5.0f / 2048.0f;
+			adc_voltage1 &= 0x0000FFFF;
+			//cpnvert voltage and shift
+			h1_in[samplesTaken] = adc_voltage1 * 5.0f / 32768.0f;
 			
+			/**
 			get_adc2_ch0();
 			adc_voltage2 = adc2_ch0_msb;
 			adc_voltage2 <<= 8;
 			adc_voltage2 |= adc2_ch0_lsb;
-			adc_voltage2 &= 0x000003FF;
-			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 2048.0f;
+			adc_voltage2 &= 0x0000FFFF;
+			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 32768.0f;
+			**/
+			
+			//Debug
+			/**
+			if (h1_in[samplseTaken] >
+			snprintf(buf, 256, "%f, %f\r\n", adc_voltage1 * 5.0f / 32768.0f,adc_voltage2 * 5.0f / 32768.0f);
+			uart_write(buf);
+			for (i = 0; i < 20; i++) { uart_update(); }
+			**/
 			
 			++samplesTaken;
 			
@@ -178,14 +189,7 @@ void main(void)
                 {      
 						snprintf(buf, 256, "\r\n%lf\r\n", secs / SAMPLES);
                         uart_write(buf);
-				        uart_update();
-                        uart_update();
-                        uart_update();
-                        uart_update();
-						uart_update();
-                        uart_update();
-                        uart_update();
-                        uart_update();
+				        for (i = 0; i < 20; i++) { uart_update(); };
                         secs = 0;
                         functionruns = 0;
                 }**/

@@ -18,7 +18,7 @@
 #include "spi_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
 
-#define SIGNAL_READ_BUFF			4
+#define SIGNAL_READ_BUFF			2
 
 .GLOBAL _get_adc1_ch0;
 .GLOBAL _init_signal_processing;
@@ -36,7 +36,7 @@
 
 // SPI 1 Signal Settings
 .VAR adc1_ch0_device_settings[3] =
-	SPI_BAUD_15MHZ,						// SPI baud for flash
+	SPI_BAUD_5MHZ,						// SPI baud for flash
 	SPI_SEL_SS0,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
@@ -53,15 +53,14 @@
 .VAR _adc1_ch0_lsb;
 
 // SPI Message
-.VAR adc1_ch0_start[4]=
+.VAR adc1_ch0_start[3]=
 	SPI_ADC1_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
-	0x01,							// Start Bit
-	0x00,						 	// Signal = 1, 00 = CH0
-	0x00;
+	0x00,						   // Data(1)
+	0x00;						   // Data(0)
 	
 	// SPI 2 Signal Settings
 .VAR adc2_ch0_device_settings[3] =
-	SPI_BAUD_15MHZ,						// SPI baud for flash
+	SPI_BAUD_5MHZ,						// SPI baud for flash
 	SPI_SEL_SS1,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
@@ -78,11 +77,10 @@
 .VAR _adc2_ch0_lsb;
 
 // SPI Message
-.VAR adc2_ch0_start[4]=
+.VAR adc2_ch0_start[3]=
 	SPI_ADC2_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
-	0x01,							// Start Bit
-	0x00,						 	// Signal = 1, 00 = CH0
-	0x00;						
+	0x00,						   // Data(1)
+	0x00;						   // Data(0)
 								
 		
 .SECTION/PM seg_pmco;
@@ -166,9 +164,9 @@ _get_adc1_ch0:
 	CALL _spi_add_queue;
 	CALL _complete_mem_spi_transfer;
 	
-	r0 = DM(adc1_ch0_receive_buffer+2);
+	r0 = DM(adc1_ch0_receive_buffer+1);
 	DM(_adc1_ch0_msb) = r0;
-	r0 = DM(adc1_ch0_receive_buffer+3);
+	r0 = DM(adc1_ch0_receive_buffer+2);
 	DM(_adc1_ch0_lsb) = r0;
 	
 	exit;
@@ -177,13 +175,13 @@ _get_adc1_ch0.end:
 _get_adc2_ch0:
 	entry;
 	
-    r4 = adc2_ch0_start;		 	// send the get channel 1 command
+    r4 = adc2_ch0_start;		 	// send the get channel 2 command
 	CALL _spi_add_queue;
 //	CALL _complete_mem_spi_transfer;
 	
-	r0 = DM(adc2_ch0_receive_buffer+2);
+	r0 = DM(adc2_ch0_receive_buffer+1);
 	DM(_adc2_ch0_msb) = r0;
-	r0 = DM(adc2_ch0_receive_buffer+3);
+	r0 = DM(adc2_ch0_receive_buffer+2);
 	DM(_adc2_ch0_lsb) = r0;
 	
 	exit;
