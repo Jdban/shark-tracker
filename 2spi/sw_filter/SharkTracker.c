@@ -116,8 +116,8 @@ void main(void)
 	initialize_fir();
 	
 	interrupt(SIG_TMZ, timer_handler);
-	timer_set((unsigned int)1702, (unsigned int)1702);
-//	timer_on();
+	timer_set((unsigned int) 2128, (unsigned int)2128);
+	//timer_on();
 	
 	for (i = 0; i < 200; i++)
 	{	
@@ -126,26 +126,24 @@ void main(void)
 	
 	for(;;)
 	{
-                   /**
+                 
                 STOP_CYCLE_COUNT(final_count, start_count);
                 START_CYCLE_COUNT(start_count);
-                secs += ((double) final_count) / CLOCKS_PER_SEC ;           
+                secs += ((double) final_count) / CLOCKS_PER_SEC ;
+                       
                 
-                if(functionruns > 10000)
+                if(functionruns > 100000)
                 {
-                        snprintf(buf, 256, "%lf\r\n", 1 / secs * 10000);
+                        snprintf(buf, 256, "%lf\r\n", 1 / secs * 100000);
                         uart_write(buf);
-                        uart_update();
-                        uart_update();
-                        uart_update();
-                        uart_update();
+                        for (i = 0; i < 20; i++) { uart_update(); } 
                         secs = 0;
                         functionruns = 0;
                 }
-                   **/
+                   
 
 		// Check if we are ready to sample
-//		if (process_signal_ready)
+		//if (process_signal_ready)
 		{
 			// Get Hydrophone 1 Voltage
 			process_signal_ready = 0;
@@ -155,49 +153,38 @@ void main(void)
 			adc_voltage1 = adc1_ch0_msb;
 			adc_voltage1 <<= 8;
 			adc_voltage1 |= adc1_ch0_lsb;
-			adc_voltage1 &= 0x0000FFFF;
-			//cpnvert voltage and shift
+			adc_voltage1 &= 0x00007FFF;
 			h1_in[samplesTaken] = adc_voltage1 * 5.0f / 32768.0f;
 			
-			/**
 			get_adc2_ch0();
 			adc_voltage2 = adc2_ch0_msb;
 			adc_voltage2 <<= 8;
 			adc_voltage2 |= adc2_ch0_lsb;
-			adc_voltage2 &= 0x0000FFFF;
-			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 32768.0f;
-			**/
+			adc_voltage2 &= 0x00007FFF;
+			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 32768.0f;			
 			
 			//Debug
-			/**
-			if (h1_in[samplseTaken] >
-			snprintf(buf, 256, "%f, %f\r\n", adc_voltage1 * 5.0f / 32768.0f,adc_voltage2 * 5.0f / 32768.0f);
-			uart_write(buf);
-			for (i = 0; i < 20; i++) { uart_update(); }
-			**/
+			functionruns++;
+			if(functionruns > 100000)
+            {
+			   snprintf(buf, 256, "%f, %f\r\n", adc_voltage1 * 5.0f / 32768.0f,adc_voltage2 * 5.0f / 32768.0f);
+			   uart_write(buf);
+			   for (i = 0; i < 20; i++) { uart_update(); }
+            }
 			
 			++samplesTaken;
 			
 			// Filter
 			if (samplesTaken >= SAMPLES)
 			{
-				/**
-				STOP_CYCLE_COUNT(final_count, start_count);
-                secs += ((double) final_count) / CLOCKS_PER_SEC ;
-				functionruns++;
-				if(functionruns > 10000)
-                {      
-						snprintf(buf, 256, "\r\n%lf\r\n", secs / SAMPLES);
-                        uart_write(buf);
-				        for (i = 0; i < 20; i++) { uart_update(); };
-                        secs = 0;
-                        functionruns = 0;
-                }**/
 
-				samplesTaken = 0;
 				
 				fir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
 				fir (h2_in, h2_out, b, h2_state, SAMPLES, TAPS);
+				
+				
+				samplesTaken = 0;
+				/*
 
 				oneCount = 0;
 				for (i = 0; i < SAMPLES; i++)
@@ -213,8 +200,8 @@ void main(void)
 	                    	oneCount++;
                     		if (oneCount > ONE_THRESHOLD)
                     		{
-		                    	//uart_write("1");
-		                    	//uart_update(); 
+		                    	uart_write("1");
+		                    	uart_update(); 
 		                    	zeroCount1 = 0;
 		                    	oneCount = 0;
 		                    	
@@ -227,7 +214,7 @@ void main(void)
 		                    	}
 		                    	else
 		                    	{
-		                    		START_CYCLE_COUNT(start_count);	
+		                    		//START_CYCLE_COUNT(start_count);	
 		                    	}
 		                    	
 		                    	break;
@@ -254,8 +241,8 @@ void main(void)
 	                    	oneCount++;
                     		if (oneCount > ONE_THRESHOLD)
                     		{
-		                    	//uart_write("2");
-		                    	//uart_update(); uart_update(); uart_update(); 
+		                    	uart_write("2");
+		                    	uart_update();  
 		                    	zeroCount2 = 0;
 		                    	oneCount = 0;
 		                    	
@@ -268,7 +255,7 @@ void main(void)
 		                    	}
 		                    	else
 		                    	{
-		                    		START_CYCLE_COUNT(start_count);	
+		                    		//START_CYCLE_COUNT(start_count);	
 		                    	}
 		                    	
 		                    	break;
@@ -280,11 +267,11 @@ void main(void)
 						zeroCount2++;
                    	}
 				}
-				
-                //START_CYCLE_COUNT(start_count);
+							*/
 			}
-			
+
 		}
+		
 	}
 }
 					/**snprintf(buf, 256, "I: %f O: %f\r\n", h1_in[i], h1_out_b[i] * 100);

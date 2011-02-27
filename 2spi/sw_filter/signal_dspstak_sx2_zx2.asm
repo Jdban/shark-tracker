@@ -18,7 +18,7 @@
 #include "spi_dspstak_sx2_zx2.h"
 #include "uart_dspstak_sx2_zx2.h"
 
-#define SIGNAL_READ_BUFF			2
+#define SIGNAL_READ_BUFF			3
 
 .GLOBAL _get_adc1_ch0;
 .GLOBAL _init_signal_processing;
@@ -36,7 +36,7 @@
 
 // SPI 1 Signal Settings
 .VAR adc1_ch0_device_settings[3] =
-	SPI_BAUD_5MHZ,						// SPI baud for flash
+	SPI_BAUD_10MHZ,						// SPI baud for flash
 	SPI_SEL_SS0,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
@@ -54,13 +54,13 @@
 
 // SPI Message
 .VAR adc1_ch0_start[3]=
-	SPI_ADC1_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
+	SPI_ADC1_CH0 | SPI_TR  | 0x01, // Device, Transmit/Receive, # bytes -1
 	0x00,						   // Data(1)
 	0x00;						   // Data(0)
 	
 	// SPI 2 Signal Settings
 .VAR adc2_ch0_device_settings[3] =
-	SPI_BAUD_5MHZ,						// SPI baud for flash
+	SPI_BAUD_10MHZ,						// SPI baud for flash
 	SPI_SEL_SS1,						// slave select flag
 	SPIMS | 							// Master mode (internal SPICLK) 
 	SPIEN| 								// Enable SPI port 
@@ -78,7 +78,7 @@
 
 // SPI Message
 .VAR adc2_ch0_start[3]=
-	SPI_ADC2_CH0 | SPI_TR  | 0x02, // Device, Transmit/Receive, # bytes -1
+	SPI_ADC2_CH0 | SPI_TR  | 0x01, // Device, Transmit/Receive, # bytes -1
 	0x00,						   // Data(1)
 	0x00;						   // Data(0)
 								
