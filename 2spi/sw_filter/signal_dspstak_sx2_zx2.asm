@@ -177,7 +177,7 @@ _get_adc2_ch0:
 	
     r4 = adc2_ch0_start;		 	// send the get channel 2 command
 	CALL _spi_add_queue;
-//	CALL _complete_mem_spi_transfer;
+	CALL _complete_mem_spi_transfer;
 	
 	r0 = DM(adc2_ch0_receive_buffer+1);
 	DM(_adc2_ch0_msb) = r0;
