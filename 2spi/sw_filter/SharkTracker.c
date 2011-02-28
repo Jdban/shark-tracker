@@ -12,10 +12,16 @@
 
 char buf[256];
 
-#define FILTER_THRESHOLD 0.001f
-#define RATIO_THRESHOLD 0.01f
-#define ZERO_THRESHOLD 150
-#define ONE_THRESHOLD 5
+#undef  DEBUG
+//#define DEBUG
+
+#define FILTER_THRESHOLD 	1.70f
+#define RATIO_THRESHOLD 	0.01f
+#define ZERO_THRESHOLD 		1000
+#define ONE_THRESHOLD 		10
+#define MAXIMUM_DIFFERENCE  100000
+#define SAMPLE_PERIOD		6.25E-06
+#define SPEED_OF_SOUND		1497
 
 #define SAMPLES 100
 #define TAPS 135
@@ -92,24 +98,15 @@ void timer_handler(int signal)
 	process_signal_ready = 1;
 }
 
-#define stopCount() \
-				STOP_CYCLE_COUNT(final_count, start_count); \
-                secs = ((double) final_count) / CLOCKS_PER_SEC ; \
-				functionruns++; \
-						snprintf(buf, 256, "%lf\r\n", secs); \
-                        uart_write(buf); \
-				        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-						uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        uart_update(); \
-                        secs = 0; 
+void nofir (float *in, float *out, void *f, void *s, int samples, int taps)
+{
+	int i;
+	
+	for (i = 0; i < samples; i++)
+	{
+		out[i] = in[i];	
+	}	
+}
 
 void main(void)
 {	
@@ -118,7 +115,7 @@ void main(void)
 	double secs = 0;
 	uint32_t zeroCount1 = 0, zeroCount2 = 0;
 	uint32_t oneCount = 0;
-	char firstHit = 0, secondHit = 0;
+	int32_t h1_start, h2_start, h1 = 0, h2 = 0, count = 0;
 	
 	initialize();
 	initialize_fir();
@@ -134,24 +131,6 @@ void main(void)
 	
 	for(;;)
 	{
-                 
-                STOP_CYCLE_COUNT(final_count, start_count);
-                START_CYCLE_COUNT(start_count);
-                secs += ((double) final_count) / CLOCKS_PER_SEC ;
-                       
-                
-                if(functionruns > 100000)
-                {
-						/**
-                        snprintf(buf, 256, "%lf\r\n", 1 / secs * 100000);
-                        uart_write(buf);
-                        for (i = 0; i < 20; i++) { uart_update(); } 
-                        secs = 0;
-                        functionruns = 0;
-                        **/
-                }
-                   
-
 		// Check if we are ready to sample
 		//if (process_signal_ready)
 		{
@@ -171,11 +150,110 @@ void main(void)
 			adc_voltage2 <<= 8;
 			adc_voltage2 |= adc2_ch0_lsb;
 			adc_voltage2 &= 0x00007FFF;
-			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 32768.0f;			
+			h2_in[samplesTaken] = adc_voltage2 * 5.0f / 32768.0f;		
+			++samplesTaken;
 			
+			// Filter
+			if (samplesTaken >= SAMPLES)
+			{
+                samplesTaken = 0;
+                
+                nofir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
+                nofir (h2_in, h2_out, b, h2_state, SAMPLES, TAPS);
+
+                oneCount = 0;
+                for (i = 0; i < SAMPLES; i++)
+                {       
+                    if (h1_out[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out[i])
+                    {
+                    									    uart_write("A");
+								    for (i = 0; i < 20; i++) { uart_update(); }
+                        if (zeroCount1 < ZERO_THRESHOLD) 
+                        {
+							zeroCount1 = 0;
+                        }
+                        else 
+                        {
+                            oneCount++;
+                            if (oneCount > ONE_THRESHOLD)
+                            {
+	                            h1 = count + i;
+	                            if (h1-h2 < MAXIMUM_DIFFERENCE && h2-h1 < MAXIMUM_DIFFERENCE)
+	                            {
+									snprintf(buf, 256, "1: %f\r\n", (h1-h2) * SAMPLE_PERIOD * SPEED_OF_SOUND);
+								    uart_write(buf);
+								    for (i = 0; i < 20; i++) { uart_update(); }
+	                            }
+                        
+	                            zeroCount1 = 0;
+	                            oneCount = 0;
+	                            break;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        zeroCount1++;
+                    }
+                }
+                                
+				oneCount = 0;
+                for (i = 0; i < SAMPLES; i++)
+                {
+                	if (h2_out[i] > FILTER_THRESHOLD && h2_in[i] * RATIO_THRESHOLD < h2_out[i])
+                    {
+                        if (zeroCount2 < ZERO_THRESHOLD) 
+                        {
+                         	zeroCount2 = 0;
+                        }
+                        else 
+                        {
+                            oneCount++;
+                            if (oneCount > ONE_THRESHOLD)
+                            {
+	                            h2 = count + i;
+	                            if (h1-h2 < MAXIMUM_DIFFERENCE && h2-h1 < MAXIMUM_DIFFERENCE)
+	                            {
+									snprintf(buf, 256, "2: %f\r\n", (h1-h2) * SAMPLE_PERIOD * SPEED_OF_SOUND);
+								    uart_write(buf);
+								    for (i = 0; i < 20; i++) { uart_update(); }
+	                            }
+	                            
+                                zeroCount2 = 0;
+                                oneCount = 0;
+                                break;
+                          	}
+                        }
+                  	}
+                    else
+                    {
+                    	zeroCount2++;
+					}
+                }
+                
+                count += SAMPLES;
+			}
+		}
+	}
+}
+
+			/**	
+            STOP_CYCLE_COUNT(final_count, start_count);
+            START_CYCLE_COUNT(start_count);
+            secs += ((double) final_count) / CLOCKS_PER_SEC ;
+            if(functionruns > 100000)
+            {
+                    snprintf(buf, 256, "%lf\r\n", 1 / secs * 100000);
+                    uart_write(buf);
+                    for (i = 0; i < 20; i++) { uart_update(); } 
+                    secs = 0;
+                    functionruns = 0;
+
+            }
+            **/
+			/**
 			//Debug
 			functionruns++;
-			/**
 			if(functionruns > 1 && h1_in[samplesTaken] > 1.39f)
             {
 			   snprintf(buf, 256, "%f, %f\r\n", adc_voltage1 * 5.0f / 32768.0f,adc_voltage2 * 5.0f / 32768.0f);
@@ -183,109 +261,8 @@ void main(void)
 			   for (i = 0; i < 20; i++) { uart_update(); }
             }
 			**/
-			
-			++samplesTaken;
-			
-			// Filter
-			if (samplesTaken >= SAMPLES)
-			{
-				fir (h1_in, h1_out, b, h1_state, SAMPLES, TAPS);
-				fir (h2_in, h2_out, b, h2_state, SAMPLES, TAPS);
-				
-				samplesTaken = 0;
-
-				oneCount = 0;
-				for (i = 0; i < SAMPLES; i++)
-				{	
-					if (h1_out[i] > FILTER_THRESHOLD && h1_in[i] * RATIO_THRESHOLD < h1_out[i])
-                    {
-		                uart_write("1");
-		                uart_update(); 
-		                /**                    	
-                    	if (zeroCount1 < ZERO_THRESHOLD) 
-                    	{
-                    		zeroCount1 = 0;
-                    	}
-                    	else 
-                    	{
-	                    	oneCount++;
-                    		if (oneCount > ONE_THRESHOLD)
-                    		{
-		                    	uart_write("1");
-		                    	uart_update(); 
-		                    	zeroCount1 = 0;
-		                    	oneCount = 0;
-		                    	
-		                    	firstHit = 1;
-		                    	if (secondHit)
-		                    	{
-		                    		firstHit = 0;
-		                    		secondHit = 0;
-									stopCount();
-		                    	}
-		                    	
-		                    	break;
-                    		}
-                    	}
-                    	**/
-                   	}
-                   	else
-                   	{
-						zeroCount1++;
-                   	}
-				}
-				
-				oneCount = 0;
-				for (i = 0; i < SAMPLES; i++)
-				{
-					if (h2_out[i] > FILTER_THRESHOLD && h2_in[i] * RATIO_THRESHOLD < h2_out[i])
-                    {
-                    			uart_write("2");
-		                    	uart_update();  
-		                /**                 
-                    	if (zeroCount2 < ZERO_THRESHOLD) 
-                    	{
-                    		zeroCount2 = 0;
-                    	}
-                    	else 
-                    	{
-	                    	oneCount++;
-                    		if (oneCount > ONE_THRESHOLD)
-                    		{
-		                    	uart_write("2");
-		                    	uart_update();  
-		                    	zeroCount2 = 0;
-		                    	oneCount = 0;
-		                    	
-		                    	secondHit = 1;
-		                    	if (firstHit)
-		                    	{
-		                    		firstHit = 0;
-		                    		secondHit = 0;
-									stopCount();
-		                    	}
-		                    	else
-		                    	{
-		                    		//START_CYCLE_COUNT(start_count);	
-		                    	}
-		                    	
-		                    	break;
-                    		}
-                    	}
-                    	**/
-                   	}
-                   	else
-                   	{
-						zeroCount2++;
-                   	}
-				}
-			}
-
-		}
-		
-	}
-}
-					/**snprintf(buf, 256, "I: %f O: %f\r\n", h1_in[i], h1_out_b[i] * 100);
-						uart_write(buf);
-						uart_update();
-					**/
+			/**
+			snprintf(buf, 256, "I: %f O: %f\r\n", h1_in[i], h1_out_b[i] * 100);
+			uart_write(buf);
+			uart_update();
+			**/
