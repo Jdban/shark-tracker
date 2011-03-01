@@ -1,0 +1,1 @@
+.EXTERN _init_signal_processing;
