@@ -19,7 +19,7 @@
 #define VOLTAGE_OFFSET 		0.20f
 #define MAXIMUM_DIFFERENCE  5000
 
-#define SAMPLES 			2000
+#define SAMPLES 			100
 #define TAPS 				139
 
 float pm b[TAPS] = {
