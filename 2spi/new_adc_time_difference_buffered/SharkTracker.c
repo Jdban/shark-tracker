@@ -19,7 +19,7 @@
 #define VOLTAGE_OFFSET 		0.20f
 #define MAXIMUM_DIFFERENCE  5000
 
-#define SAMPLES 			100
+#define SAMPLES 			20
 #define TAPS 				139
 
 float pm b[TAPS] = {
@@ -184,7 +184,7 @@ void main(void)
 	            		if (!h1_high)
 	            		{
 							h1_stop = counter + i;
-							h1_stop = h1_start + h1_stop - h1_start;
+							h1_stop = h1_start; //+ (h1_stop - h1_start)/2;
 				            
 							if (h1_stop - h2_stop < MAXIMUM_DIFFERENCE)
 							{
@@ -215,7 +215,7 @@ void main(void)
 	            		if (!h2_high)
 	            		{
 							h2_stop = counter + i;
-							h2_stop = h2_start + h2_stop - h2_start;
+							h2_stop = h2_start; // + (h2_stop - h2_start)/2;
 				            
 							if (h2_stop - h1_stop < MAXIMUM_DIFFERENCE)
 							{
